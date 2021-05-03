@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.Month;
+import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -138,7 +140,7 @@ public class HigherOrderFunctionsLearningTest {
     @Test
     public void testCountNonBots() {
         Stream<Revision> input = getRevisions("soup30.json");
-        long actual = 0;
+        long actual = input.filter(revision -> !revision.user.toLowerCase().contains("bot")).count();
         int expected = 26;
         Assertions.assertEquals(expected, actual);
     }
@@ -149,7 +151,7 @@ public class HigherOrderFunctionsLearningTest {
     @Test
     public void testCountChangesInFebruary() {
         Stream<Revision> input = getRevisions("soup30.json");
-        long actual = 0;
+        long actual = input.filter(revision -> revision.timestamp.atZone(ZoneId.of("UTC")).getMonth()==Month.FEBRUARY).count();
         int expected = 9;
         Assertions.assertEquals(expected, actual);
     }
@@ -160,7 +162,7 @@ public class HigherOrderFunctionsLearningTest {
     @Test
     public void testCountChangesByMonth() {
         Stream<Revision> input = getRevisions("soup04.json");
-        Map<Month, Long> actual = null;
+        Map<Month, Long> actual = input.collect(Collectors.groupingBy(revision -> revision.timestamp.atZone(ZoneId.of("UTC")).getMonth(),Collectors.counting()));
         Map<Month, Long> expected = Map.of(Month.FEBRUARY, 3L, Month.MARCH, 1L);
         Assertions.assertEquals(expected, actual);
     }
@@ -172,7 +174,8 @@ public class HigherOrderFunctionsLearningTest {
     @Test
     public void testDetermineMostActiveMonth() {
         Stream<Revision> input = getRevisions("soup30.json");
-        Month actual = null;
+        Month actual = Collections.max(input.collect(Collectors.groupingBy(revision ->revision.timestamp.atZone(ZoneId.of("UTC")).getMonth(),
+        Collectors.counting())).entrySet(),Map.Entry.comparingByValue()).getKey();
         Month expected = Month.FEBRUARY;
         Assertions.assertEquals(expected, actual);
     }
